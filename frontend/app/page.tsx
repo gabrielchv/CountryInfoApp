@@ -1,16 +1,10 @@
-import Link from 'next/link'
+import { Country } from '@/data/data'
+import HomePage from '@/components/pages/HomePage'
 
-export default async function Home() {
-  const res = await fetch('http://localhost:4000/countries')
-  const countries: Array<{ countryCode: string; name: string }> =
-    await res.json()
-  return (
-    <div className="flex flex-col">
-      {countries.map((country) => (
-        <Link href={`/${country.countryCode}`} key={country.countryCode}>
-          {country.name}
-        </Link>
-      ))}
-    </div>
-  )
+export default async function Page() {
+  const res = await fetch(`${process.env.API_URL}/countries`, {
+    next: { revalidate: 36000 },
+  })
+  const countries: Array<Country> = await res.json()
+  return <HomePage countries={countries} />
 }

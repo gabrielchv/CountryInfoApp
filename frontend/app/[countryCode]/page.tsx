@@ -1,53 +1,22 @@
-import Image from 'next/image'
-import Link from 'next/link'
+import { Country, CountryDetail } from '@/data/data'
+import CountryPage from '@/components/pages/CountryPage'
+import { notFound } from 'next/navigation'
 
-export default async function Page({
-  params: { countryCode },
-}: {
-  params: { countryCode: string }
-}) {
-  const res = await fetch(`http://localhost:4000/country/${countryCode}`)
-  const {
-    country,
-    flag,
-    borders,
-    populationData,
-  }: {
-    country: {
-      name: string
-      countryCode: string
-    }
-    borders: Array<{
-      countryCode: string
-      name: string
-    }>
-    populationData: Array<{
-      year: number
-      value: number
-    }>
-    flag: string
-  } = await res.json()
+export async function generateStaticParams() {
+  const res = await fetch(`${process.env.API_URL}/countries`)
+  const countries: Array<Country> = await res.json()
 
-  console.log(populationData)
+  return countries.map(({ countryCode }) => ({
+    countryCode,
+  }))
+}
 
-  return (
-    <div className="flex flex-col gap-10 items-center p-4">
-      <div className="flex gap-1">
-        <Image alt={`${country.name} flag`} height={24} width={24} src={flag} />
-        <h1>{country.name}</h1>
-      </div>
-      <div className="flex flex-col gap-1">
-        Border Countries:
-        {borders.map((borderCountry) => (
-          <Link
-            className="underline"
-            href={`/${borderCountry.countryCode}`}
-            key={borderCountry.countryCode}
-          >
-            {borderCountry.name}
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
+export default async function Page({ params: { countryCode } }: { params: { countryCode: string } }) {
+  const res = await fetch(`${process.env.API_URL}/country/${countryCode}`, {
+    next: { revalidate: 36000 },
+  })
+  if (!res.ok) notFound()
+  const countryDetail: CountryDetail = await res.json()
+
+  return <CountryPage countryDetail={countryDetail} />
 }
