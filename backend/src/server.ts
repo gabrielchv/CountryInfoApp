@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 app.use(express.json());
 
@@ -71,12 +71,10 @@ app.get('/country/:countryCode', async (req: Request, res: Response) => {
         country: string;
         code: string;
         iso3: string;
-        populationCounts: [
-          {
-            year: number;
-            value: number;
-          },
-        ];
+        populationCounts: Array<{
+          year: number;
+          value: number;
+        }>;
       };
     };
 
@@ -91,10 +89,13 @@ app.get('/country/:countryCode', async (req: Request, res: Response) => {
       };
     };
 
-    const populationData: PopulationData = await populationRes.json();
-    const flagData: FlagData = await flagRes.json();
+    const [populationData, flagData]: [PopulationData, FlagData] = await Promise.all([
+      populationRes.json(),
+      flagRes.json(),
+    ]);
 
     const responseData = {
+      country: { name: countryInfo.commonName, countryCode: countryInfo.countryCode },
       borders: countryInfo.borders.map(({ commonName, countryCode }) => ({
         countryCode,
         name: commonName,
